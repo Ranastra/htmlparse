@@ -1,8 +1,7 @@
-# Class for html file
 from helper import get_config, internal_id_count
 
 config = get_config()
-OBJECT_PROPERTYS = ["Style", "Class", "Content", "Name", "Children", "__ID"]
+OBJECT_PROPERTYS = ["Style", "Class", "Content", "Name", "Children", "_Tag__ID", "_Tag__Indentation_level"]
 
 
 class Style_attribut():
@@ -20,6 +19,7 @@ class Style_attribut():
     
     def is_empty(self) -> bool:
         return len(vars(self)) == 0
+    
     
 
 class Class_attribut():
@@ -45,6 +45,9 @@ class Class_attribut():
     
     def is_empty(self) -> bool:
         return len(self.__classes) == 0
+    
+    def __eq__(self, other:str) -> bool:
+        return other in self.__classes
 
 
 class Children():
@@ -67,11 +70,24 @@ class Children():
 
     def is_empty(self) -> bool:
         return len(self.__contents) == 0
+    
+    def __iter__(self):
+        return iter(self.__contents)
+    
+    def __getitem__(self, index):
+        return self.__contents[index]
+    
+    def __str__(self):
+        return "\n" + "\n".join([str(tag) for tag in self]) + "\n"
+    
+    def filter_by(self, **kwargs):
+        pass
 
 
 class Tag():
     @internal_id_count
     def __init__(self, name:str, id:int):
+        self.__Indentation_level = 0
         self.__ID = id
         self.Name = name
         self.Class = Class_attribut() # shit all uppercase
@@ -80,23 +96,26 @@ class Tag():
         self.Children = Children()
 
     def __str__(self) -> str:
-        s = "<" + self.Name
+        s = (" " * self.__Indentation_level * int(config["indentation-per-level"])) + "<" + self.Name
         if not self.Class.is_empty(): s += " " + str(self.Class) 
         if not self.Style.is_empty(): s += " " + str(self.Style)
         propertys = vars(self)
         for key in propertys:
             if key not in OBJECT_PROPERTYS and propertys[key] != None:
                 s += " " + key + "=" + propertys[key]
-        if self.Children.is_empty():
-            s += ">" + self.Content
-        else:
-            s += ">" + str(self.Children)
+        s += ">" + self.Content
+        if not self.Children.is_empty():
+            s += str(self.Children) + (" " * self.__Indentation_level * int(config["indentation-per-level"])) 
         s += "</" + self.Name + ">"
         return s
     
     def __hash__(self) -> int:
         return self.__ID
     
+    def __set_indentation(self, level):
+        self.__Indentation_level = level
+        for child in self.Children:
+            child.__set_indentation(level+1)
 
     
 class File():
@@ -106,6 +125,24 @@ class File():
         else: self.lang = "en"
         if "charset" in config: self.Charset = config["charset"] 
         else: self.lang = "UTF-8"
+        self.body = Tag("body")
+
+    def __str__(self):
+        s = "<!DOCTYPE html>\n<html lang=" + self.Lang + ">\n"
+        self.body._Tag__set_indentation(0)
+        s += "<head><meta charset='" + self.Charset + "'></head>\n"
+        s += str(self.body) + "\n</html>"
+        return s
+    
+
+    def output(self):
+        with open("html/" + self.Name + ".html", "w") as file:
+            file.write(str(self))
+
+
+class CSSFile():
+    def __init__(self):
+
 
 
 #f = File("test")
@@ -119,12 +156,16 @@ class File():
 # print(c)
 # c -= "test"
 # print(c)
-t = Tag("a")
+f = File("test_html")
+t = Tag("div")
+f.body.Children += t
 t.Style.color = "red"
 t.Style.font_weight = "bold"
 t.Class += "important"
-t.Class += "test"
-t.Content = Tag("p")
-t.Content.Content = "halllo hier ist text"
-t.href = "example.html"
-print(t)
+t.Children += Tag("p")
+t.Children += Tag("p")
+for (i, child) in enumerate(t.Children):
+    child.Content = "some text" + str(i)
+    child.Class += "child-tag"
+t.id = "'parent-tag'"
+f.output()
