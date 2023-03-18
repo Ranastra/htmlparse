@@ -18,3 +18,8 @@ def internal_id_count(func):
         internal_id += 1
         return func(*args, id=internal_id)
     return wrapper
+
+
+def format_identifiers(s:str) -> str:
+    return s.replace("_", "-").lower()
+    
