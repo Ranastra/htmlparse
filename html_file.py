@@ -2,7 +2,7 @@ from helper import get_config, internal_id_count, format_identifiers
 from os import mkdir
 
 config = get_config()
-OBJECT_PROPERTYS = ["Style", "Class", "Content", "Name", "Children", "_Tag__ID", "_Tag__Indentation_level", "_TypeRule__char"]
+OBJECT_PROPERTYS = ["Style", "Class", "Content", "Name", "Children", "_ID", "_Tag__Indentation_level", "_TypeRule__char"]
 
 
 class Style_attribut():
@@ -86,11 +86,10 @@ class Children():
 
 class Tag():
     @internal_id_count
-    def __init__(self, name:str, id:int):
+    def __init__(self, name:str):
         self.__Indentation_level = 0
-        self.__ID = id
         self.Name = name
-        self.Class = Class_attribut() # shit all uppercase
+        self.Class = Class_attribut()
         self.Style = Style_attribut()
         self.Content = ""
         self.Children = Children()
@@ -110,12 +109,38 @@ class Tag():
         return s
     
     def __hash__(self) -> int:
-        return self.__ID
+        return self._ID
     
     def __set_indentation(self, level):
         self.__Indentation_level = level
         for child in self.Children:
             child.__set_indentation(level+1)
+
+    
+class STag():
+    @internal_id_count
+    def __init__(self, name:str):
+        self.Name = name
+        self.Class = Class_attribut()
+        self.Style = Style_attribut()
+        self.__Indentation_level = 0
+
+    def __set_indentation(self, level):
+        self.__Indentation_level = level
+
+    def __str__(self) -> str:
+        s = (" " * self.__Indentation_level * int(config["indentation-per-level"])) + "<" + self.Name
+        if not self.Class.is_empty(): s += " " + str(self.Class) 
+        if not self.Style.is_empty(): s += " " + str(self.Style)
+        propertys = vars(self)
+        for key in propertys:
+            if key not in OBJECT_PROPERTYS and propertys[key] != None:
+                s += " " + key + "=" + propertys[key]
+        s += " />"
+        return s
+
+    def __hash__(self) -> int:
+        return -self._ID
 
     
 class HTMLFile():
@@ -148,7 +173,7 @@ class TypeRule():
         s = ""
         rules = vars(self)
         for rule in rules:
-            if rule not in OBJECT_PROPERTYS:
+            if rule not in OBJECT_PROPERTYS and rules[rule] != None:
                 s += "\n" + self.__char + format_identifiers(rule) + " {\n" + str(rules[rule]) + "\n}\n"
         return s
     
@@ -192,22 +217,3 @@ class Project():
         self.HTML.output(self.__path)
         self.CSS.output(self.__path)
 
-
-p = Project("projects/test", "test")
-div = Tag("div")
-p.HTML.body.Children += div
-div.Class += "important"
-div.Children += Tag("p")
-div.Children += Tag("p")
-for (i, child) in enumerate(div.Children):
-    child.Content = "some text" + str(i)
-    child.Class += "child_tag"
-div.id = "'parent-tag'"
-rule = CSSRule()
-rule2 = CSSRule()
-p.CSS.Class.child_tag = rule
-p.CSS.ID.parent_tag = rule2
-rule.background_color = "black"
-rule2.font_weight = "bold"
-rule2.color = "red"
-p.output()

@@ -12,11 +12,13 @@ def get_config() -> dict[str, str]:
     
 
 def internal_id_count(func):
-    internal_id = 0
+    internal_id = 1
     def wrapper(*args):
         nonlocal internal_id
         internal_id += 1
-        return func(*args, id=internal_id)
+        obj = func(*args)
+        obj._ID = internal_id
+        return obj
     return wrapper
 
 
