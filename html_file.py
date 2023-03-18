@@ -1,7 +1,8 @@
-from helper import get_config, internal_id_count
+from helper import get_config, internal_id_count, format_identifiers
+from os import mkdir
 
 config = get_config()
-OBJECT_PROPERTYS = ["Style", "Class", "Content", "Name", "Children", "_Tag__ID", "_Tag__Indentation_level"]
+OBJECT_PROPERTYS = ["Style", "Class", "Content", "Name", "Children", "_Tag__ID", "_Tag__Indentation_level", "_TypeRule__char"]
 
 
 class Style_attribut():
@@ -13,7 +14,7 @@ class Style_attribut():
         propertys = vars(self)
         for key in propertys:
             if propertys[key] != None:
-                s += key.replace("_", "-") + ":" + propertys[key] + ";"
+                s += format_identifiers(key) + ":" + propertys[key] + ";"
         s += "'"
         return s
     
@@ -21,7 +22,6 @@ class Style_attribut():
         return len(vars(self)) == 0
     
     
-
 class Class_attribut():
     def __init__(self):
         self.__classes:list[str] = []
@@ -40,7 +40,7 @@ class Class_attribut():
         return self
 
     def __str__(self) -> str:
-        s = "class='" + " ".join(self.__classes) + "'"
+        s = "class='" + " ".join(format_identifiers(cl) for cl in self.__classes) + "'"
         return s
     
     def is_empty(self) -> bool:
@@ -118,7 +118,7 @@ class Tag():
             child.__set_indentation(level+1)
 
     
-class File():
+class HTMLFile():
     def __init__(self, name:str):
         self.Name = name
         if "lang" in config: self.Lang = config["lang"] 
@@ -130,42 +130,84 @@ class File():
     def __str__(self):
         s = "<!DOCTYPE html>\n<html lang=" + self.Lang + ">\n"
         self.body._Tag__set_indentation(0)
-        s += "<head><meta charset='" + self.Charset + "'></head>\n"
+        s += "<head><meta charset='" + self.Charset + "' /><link rel='stylesheet' href='" + self.Name + ".css' /></head>\n"
         s += str(self.body) + "\n</html>"
         return s
     
 
-    def output(self):
-        with open("html/" + self.Name + ".html", "w") as file:
+    def output(self, path):
+        with open(path + "/" + self.Name + ".html", "w") as file:
             file.write(str(self))
 
 
-class CSSFile():
+class TypeRule():
+    def __init__(self, char):
+        self.__char = char
+
+    def __str__(self):
+        s = ""
+        rules = vars(self)
+        for rule in rules:
+            if rule not in OBJECT_PROPERTYS:
+                s += "\n" + self.__char + format_identifiers(rule) + " {\n" + str(rules[rule]) + "\n}\n"
+        return s
+    
+
+class CSSRule():
     def __init__(self):
+        pass
+
+    def __str__(self):
+        rules = vars(self)
+        s = "\n".join([format_identifiers(key) + ":" + rules[key] + ";" for key in rules])
+        return s
+    
+
+class CSSFile():
+    def __init__(self, name):
+        self.Class = TypeRule(".")
+        self.ID = TypeRule("#")
+        self.Name = name
+
+    def __str__(self):
+        s = str(self.Class) + str(self.ID)
+        return s
+    
+    def output(self, path):
+        with open(path + "/" + self.Name + ".css", "w") as file:
+            file.write(str(self))
+
+    
+class Project():
+    def __init__(self, path:str, name:str):
+        try:
+            mkdir(path)
+        except: pass
+        self.__path = path
+        self.Name = name
+        self.HTML = HTMLFile(name)
+        self.CSS = CSSFile(name)
+
+    def output(self):
+        self.HTML.output(self.__path)
+        self.CSS.output(self.__path)
 
 
-
-#f = File("test")
-#s = Style_attribut()
-#s.background_color = "white" # no Hyphen but underscore
-#print(s)
-#print(vars(f))
-# c = Class_attribut()
-# c += "hallo"
-# c += "test"
-# print(c)
-# c -= "test"
-# print(c)
-f = File("test_html")
-t = Tag("div")
-f.body.Children += t
-t.Style.color = "red"
-t.Style.font_weight = "bold"
-t.Class += "important"
-t.Children += Tag("p")
-t.Children += Tag("p")
-for (i, child) in enumerate(t.Children):
+p = Project("projects/test", "test")
+div = Tag("div")
+p.HTML.body.Children += div
+div.Class += "important"
+div.Children += Tag("p")
+div.Children += Tag("p")
+for (i, child) in enumerate(div.Children):
     child.Content = "some text" + str(i)
-    child.Class += "child-tag"
-t.id = "'parent-tag'"
-f.output()
+    child.Class += "child_tag"
+div.id = "'parent-tag'"
+rule = CSSRule()
+rule2 = CSSRule()
+p.CSS.Class.child_tag = rule
+p.CSS.ID.parent_tag = rule2
+rule.background_color = "black"
+rule2.font_weight = "bold"
+rule2.color = "red"
+p.output()
