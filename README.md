@@ -7,7 +7,7 @@ Nearly all methods return the object itself or a object of the same type to allo
 Tags are generally organized in a tree like structure: every tag has a reference to its child-tags and parent-tag
 Child-tags can be accessed by indexing or iterating through the parent-tag. 
 The methods that create only one new child-tag return the child tag, the others self.
-The class Project sets up a template with a CCSFile and HTMLFile instance, creates a folder at specified path and links the stylesheet.  
+The class Project sets up a template with a CSSFile and HTMLFile instance, creates a folder at specified path and links the stylesheet.  
 The class STag is for self-closing tags.
 for the html class attribut you have to use "klass" because "class" is reserved.
 
