@@ -33,49 +33,15 @@ class Project():
         try:
             mkdir(path)
         except: pass
-        self.__HTML:HTMLFile = HTMLFile(path, name)
-        self.__CSS:CSSFile = CSSFile(path, name)
+        self.__name = name
+        self.__path = path
+        self.__HTML:HTMLFile = HTMLFile()
+        self.__CSS:CSSFile = CSSFile()
         self.__HTML.head.single_tag_child("link").set_properties(rel="'stylesheet'", href=f"'{name}.css'")
         self.__HTML.html.set_properties(lang=f"'{config['lang']}'")
 
     @property
-    def HTML(self) -> "HTMLFile":
-        return self.__HTML
-    
-    @property
-    def CSS(self) -> "CSSFile":
-        return self.__CSS
-
-    def output(self) -> None:
-        self.HTML.output()
-        self.CSS.output()
-
-    def __str__(self) -> str:
-        return str(self.HTML) + "\n\n" + str(self.CSS)
-
-
-class HTMLFile():
-    def __init__(self, path:str, name:str):
-        self.__html:Tag = Tag("html")
-        self.__head:Tag = self.__html.normal_tag_child("head")
-        self.__body:Tag = self.__html.normal_tag_child("body")
-        self.__name:str = name
-        self.__path:str = path
-
-    @property
-    def html(self) -> "Tag":
-        return self.__html
-    
-    @property
-    def head(self) -> "Tag":
-        return self.__head
-    
-    @property
-    def body(self) -> "Tag":
-        return self.__body
-    
-    @property
-    def name(self) -> "str":
+    def name(self) -> str:
         return self.__name
     
     @name.setter
@@ -90,12 +56,54 @@ class HTMLFile():
     def path(self, new:str) -> None:
         self.__path = new
 
+    @property
+    def HTML(self) -> "HTMLFile":
+        return self.__HTML
+    
+    @HTML.setter
+    def HTML(self, new:"HTMLFile") -> None:
+        if isinstance(new, HTMLFile): self.__HTML = new
+    
+    @property
+    def CSS(self) -> "CSSFile":
+        return self.__CSS
+    
+    @CSS.setter
+    def CSS(self, new:"CSSFile") -> None:
+        if isinstance(new, CSSFile): self.__CSS = new
+
+    def output(self) -> None:
+        self.HTML.output(self.path, self.name)
+        self.CSS.output(self.path, self.name)
+
+    def __str__(self) -> str:
+        return str(self.HTML) + "\n\n" + str(self.CSS)
+
+
+class HTMLFile():
+    def __init__(self):
+        self.__html:Tag = Tag("html")
+        self.__head:Tag = self.__html.normal_tag_child("head")
+        self.__body:Tag = self.__html.normal_tag_child("body")
+
+    @property
+    def html(self) -> "Tag":
+        return self.__html
+    
+    @property
+    def head(self) -> "Tag":
+        return self.__head
+    
+    @property
+    def body(self) -> "Tag":
+        return self.__body
+
     def __str__(self) -> str:
         self.html.set_indent_level(0)
         return "<!DOCTYPE html>\n" + str(self.html)
     
-    def output(self) -> None:
-        with open(f"{self.path}/{self.name}.html", "w") as f:
+    def output(self, path:str, name:str) -> None:
+        with open(f"{path}/{name}.html", "w") as f:
             f.write(str(self))
     
 
@@ -150,26 +158,8 @@ class CSSRule():
 
 
 class CSSFile():
-    def __init__(self, path:str, name:str):
-        self.__name:str = name
-        self.__path:str = path
+    def __init__(self):
         self.__rules:dict[str, CSSRule] = {}
-
-    @property
-    def name(self) -> str:
-        return self.__name
-    
-    @name.setter
-    def name(self, new:str) -> None:
-        self.__name = new
-
-    @property
-    def path(self) -> str:
-        return self.__path
-    
-    @path.setter
-    def path(self, new:str) -> None:
-        self.__path = new
 
     def new_selector(self, name:str) -> "CSSRule":
         self.__rules[deformat(name)] = CSSRule(1)
@@ -190,8 +180,8 @@ class CSSFile():
             s += fm_idf(sel) + str(value) + "\n\n"
         return s
     
-    def output(self) -> None:
-        with open(f"{self.path}/{self.name}.css", "w") as f:
+    def output(self, path:str, name:str) -> None:
+        with open(f"{path}/{name}.css", "w") as f:
             f.write(str(self))
 
 
