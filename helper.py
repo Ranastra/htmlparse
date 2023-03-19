@@ -24,4 +24,7 @@ def internal_id_count(func):
 
 def format_identifiers(s:str) -> str:
     return s.replace("_", "-").lower()
+
+def deformat(s:str) -> str:
+    return s.replace("-", "_")
     
