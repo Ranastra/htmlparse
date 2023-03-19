@@ -103,7 +103,8 @@ class HTMLFile():
         return "<!DOCTYPE html>\n" + str(self.html)
     
     def output(self, path:str, name:str) -> None:
-        with open(f"{path}/{name}.html", "w") as f:
+        if path: path += "/"
+        with open(f"{path}{name}.html", "w") as f:
             f.write(str(self))
     
 
@@ -148,7 +149,7 @@ class CSSRule():
     
     def __str__(self) -> str:
         if self.__type == INLINE_CSS:
-            s = "'" + "".join([f"{key}:{value};" for (key, value) in self.__properties.items()]) + "'"
+            s = "'" + "".join([f"{fm_idf(key)}:{value};" for (key, value) in self.__properties.items()]) + "'"
         elif self.__type == EXTERNAL_CSS:
             s = " {\n"
             for (key, value) in self.__properties.items():
@@ -181,7 +182,8 @@ class CSSFile():
         return s
     
     def output(self, path:str, name:str) -> None:
-        with open(f"{path}/{name}.css", "w") as f:
+        if path: path += "/"
+        with open(f"{path}{name}.css", "w") as f:
             f.write(str(self))
 
 

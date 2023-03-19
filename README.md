@@ -11,26 +11,28 @@ The class Project sets up a template with a CCSFile and HTMLFile instance, creat
 The class STag is for self-closing tags.
 for the html class attribut you have to use "klass" because "class" is reserved.
 
-This are all methods / classes on the file:
+This are all methods / classes on the htmlparse file:
 ```
 class Project():
     def __init__(self, path:str, name:str):
+@property    def name(self) -> str:
+@name.setter    def name(self, new:str) -> None:
+@property    def path(self) -> str:
+@path.setter    def path(self, new:str) -> None:
 @property    def HTML(self) -> "HTMLFile":
+@HTML.setter    def HTML(self, new:"HTMLFile") -> None:
 @property    def CSS(self) -> "CSSFile":
+@CSS.setter    def CSS(self, new:"CSSFile") -> None:
     def output(self) -> None:
     def __str__(self) -> str:
 
 class HTMLFile():
-    def __init__(self, path:str, name:str):
+    def __init__(self):
 @property    def html(self) -> "Tag":
 @property    def head(self) -> "Tag":
 @property    def body(self) -> "Tag":
-@property    def name(self) -> "str":
-@name.setter    def name(self, new:str) -> None:
-@property    def path(self) -> str:
-@path.setter    def path(self, new:str) -> None:
     def __str__(self) -> str:
-    def output(self) -> None:
+    def output(self, path:str, name:str) -> None:
 
 class CSSRule():
     def __init__(self, type:int=INLINE_CSS):
@@ -45,17 +47,13 @@ class CSSRule():
     def __str__(self) -> str:
 
 class CSSFile():
-    def __init__(self, path:str, name:str):
-@property    def name(self) -> str:
-@name.setter    def name(self, new:str) -> None:
-@property    def path(self) -> str:
-@path.setter    def path(self, new:str) -> None:
+    def __init__(self):
     def new_selector(self, name:str) -> "CSSRule":
     def pop_selector(self, name:str) -> "CSSRule":
     def __getitem__(self, sel:str) -> CSSRule:
     def get_selector(self, sel:str) -> CSSRule:
     def __str__(self) -> str:
-    def output(self) -> None:
+    def output(self, path:str, name:str) -> None:
 
 class ClassContainer():
     def __init__(self):
@@ -130,5 +128,12 @@ class STag():
     def get_position(self, prev=[]) -> list[int]:
     def __eq__(self, other) -> bool:
     def __str__(self) -> str:
+```
+
+functions on read_css file:
+```
+def get_css_file(path:str, name:str) -> hp.CSSFile:
+def parse_css_file(s:str) -> hp.CSSFile:
+def parse_css_rule(s:str) -> hp.CSSRule:
 ```
 
