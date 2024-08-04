@@ -137,7 +137,7 @@ class Tag:
     def display(self, indent_level: int = 0) -> str:
         if isinstance(indent_level, int) and indent_level >= 0:
             s = indentation * indent_level + "<" + self.tag_name
-            if not self.style.empty:
+            if not self.style.empty():
                 s += ' style="' + self.style.display() + '"'
             for attr in self.__attributes:
                 if attr in self.__dict__.keys():
@@ -176,10 +176,17 @@ class Tag:
                     new_node = Tag(tag_name)
                     attributes = html[tag_name_end:tag_end].strip()
                     for attr in attributes.split(" "):
-                        if not attr:
+                        attr = attr.strip()
+                        if not attr or attr == "/":
                             continue
                         attr = attr.split("=")
-                        new_node.__setattr__(attr[0], attr[1].strip('"'))
+                        attr_name = attr[0]
+                        attr_value = attr[1].strip('"')
+                        if attr_name == "style":
+                            css = style.Style(attr_value)
+                            new_node.style = css
+                        else:
+                            new_node.__setattr__(attr_name, attr_value)
                     stack[-1] += new_node
                     if not new_node.__self_closing:
                         stack.append(new_node)
